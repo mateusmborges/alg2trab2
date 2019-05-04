@@ -24,6 +24,32 @@ void binarioNaTela1(FILE *ponteiroArquivoBinario) {
 	free(mb);
 }
 
+void binarioNaTela2(char *nomeArquivoBinario) {
+
+	/* Escolha essa função se você já fechou o ponteiro de arquivo 'FILE *'.
+	*  Ela vai abrir de novo para leitura e depois fechar. */
+
+	unsigned char *mb;
+	unsigned long i;
+	size_t fl;
+	FILE *fs;
+	if(nomeArquivoBinario == NULL || !(fs = fopen(nomeArquivoBinario, "rb"))) {
+		fprintf(stderr, "ERRO AO ESCREVER O BINARIO NA TELA (função binarioNaTela2): não foi possível abrir o arquivo que me passou para leitura. Ele existe e você tá passando o nome certo? Você lembrou de fechar ele com fclose depois de usar? Se você não fechou ele, pode usar a outra função, binarioNaTela1, ou pode fechar ele antes de chamar essa função!\n");
+		return;
+	}
+	fseek(fs, 0, SEEK_END);
+	fl = ftell(fs);
+	fseek(fs, 0, SEEK_SET);
+	mb = (unsigned char *) malloc(fl);
+	fread(mb, 1, fl, fs);
+	for(i = 0; i < fl; i += sizeof(unsigned char)) {
+		printf("%02X ", mb[i]);
+		if((i + 1) % 16 == 0)	printf("\n");
+	}
+	free(mb);
+	fclose(fs);
+}
+
 //funcao q verifica se uma string contem apenas digitos
 int ehNumero(char* string){
 	if(string[0] == '\0'){
@@ -51,7 +77,7 @@ int main(){
 	fgets(entrada,100,stdin);
 	//decodificação da entrada
 	char func = entrada[0];
-	char readFile[50], nc[5];
+	char readFile[50], nc[10];
 	int i, j, n, atual, topoPilha;
 	const int menosum = -1;
 	//limpar as strings acima
@@ -77,7 +103,7 @@ int main(){
 		}
 		//verifica se nao tem nenhum \n nas strings
 		for(i = 0; i < 30; i++){
-			if(i < 5){
+			if(i < 10){
 				if(nc[i] == '\n'){
 					nc[i] = '\0';
 				}
@@ -99,6 +125,12 @@ int main(){
 			printf("Falha no processamento do arquivo");
 			return 0;
 		}
+		//volta um byte para reescrever o status
+		fseek(arqbin,-1,SEEK_CUR);
+		//atualiza o status
+		status = '0';
+		fwrite(&status,sizeof(char),1,arqbin);
+
 		//le o topo da pilha no cabeçalho
 		fread(&topoPilha,sizeof(int),1,arqbin);
 		//verifica se nc é um numero valido
@@ -173,15 +205,7 @@ int main(){
 			}
 			//verifica se o campo da entrada é nroInscricao
 			if(strcmp(nomeCampo[atual],"nroInscricao") == 0){
-				//verifica se o valor do campo é um numero
-				if(ehNumero(valorCampo[atual])){
-					vci = strtol(valorCampo[atual],NULL,10);
-				}
-				//se o valor nao for um numero, dá erro
-				else{
-					printf("Falha no processamento do arquivo.");
-					return 0;
-				}
+				vci = strtol(valorCampo[atual],NULL,10);
 				//vai pro começo dos registros
 				fseek(arqbin,16000,SEEK_SET);
 				//cria uma variavel int para ler o nroInscricao do registro atual
@@ -206,7 +230,7 @@ int main(){
 							fwrite(&topoPilha,sizeof(int),1,arqbin); //atualiza o topo da pilha
 							//transforma todos os outros campos do registro em lixo
 							for(i = 0; i < 75; i++){
-								fputc('@',arqbin);
+								fputs("@",arqbin);
 							}
 							topoPilha = (ftell(arqbin) - 16000 - 80)/80;	//atualiza o topoPilha com o RRN do registro atual
 							//atualiza o topoPilha no cabeçalho
@@ -274,7 +298,7 @@ int main(){
 							fwrite(&topoPilha,sizeof(int),1,arqbin); //atualiza o topo da pilha
 							//transforma todos os outros campos do registro em lixo
 							for(i = 0; i < 75; i++){
-								fputc('@',arqbin);
+								fputs("@",arqbin);
 							}
 							topoPilha = (ftell(arqbin) - 16000 - 80)/80;	//atualiza o topoPilha com o RRN do registro atual
 						}
@@ -333,7 +357,7 @@ int main(){
 							fwrite(&topoPilha,sizeof(int),1,arqbin); //atualiza o topo da pilha
 							//transforma todos os outros campos do registro em lixo
 							for(i = 0; i < 75; i++){
-								fputc('@',arqbin);
+								fputs("@",arqbin);
 							}
 							topoPilha = (ftell(arqbin) - 16000 - 80)/80;	//atualiza o topoPilha com o RRN do registro atual
 						}
@@ -402,7 +426,7 @@ int main(){
 								fwrite(&topoPilha,sizeof(int),1,arqbin); //atualiza o topo da pilha
 								//transforma todos os outros campos do registro em lixo
 								for(i = 0; i < 75; i++){
-									fputc('@',arqbin);
+									fputs("@",arqbin);
 								}
 								topoPilha = (ftell(arqbin) - 16000 - 80)/80;	//atualiza o topoPilha com o RRN do registro atual
 							}
@@ -479,7 +503,7 @@ int main(){
 								fwrite(&topoPilha,sizeof(int),1,arqbin); //atualiza o topo da pilha
 								//transforma todos os outros campos do registro em lixo
 								for(i = 0; i < 75; i++){
-									fputc('@',arqbin);
+									fputs("@",arqbin);
 								}
 								topoPilha = (ftell(arqbin) - 16000 - 80)/80;	//atualiza o topoPilha com o RRN do registro atual
 							}
@@ -519,7 +543,7 @@ int main(){
 									fwrite(&topoPilha,sizeof(int),1,arqbin); //atualiza o topo da pilha
 									//transforma todos os outros campos do registro em lixo
 									for(i = 0; i < 75; i++){
-										fputc('@',arqbin);
+										fputs("@",arqbin);
 									}
 									topoPilha = (ftell(arqbin) - 16000 - 80)/80;	//atualiza o topoPilha com o RRN do registro atual
 								}
@@ -569,10 +593,16 @@ int main(){
 
 		}	//acaba for de atual a n
 
-		//printa o arquivo no stdout com a função feita pelo monitor
-		//binarioNaTela1(arqbin);
+		//volta pro primeiro byte para atualizar o status
+		fseek(arqbin,0,SEEK_SET);
+		//atualiza o status para consistente
+		status = '1';
+		fwrite(&status,sizeof(char),1,arqbin);
+
 		//fecha o arquivo de leitura/escrita
 		fclose(arqbin);
+		//printa o arquivo no stdout com a função feita pelo monitor
+		binarioNaTela2(readFile);
 
 	} //acaba a funcionalidade 5
 	
@@ -613,6 +643,12 @@ int main(){
 			printf("Falha no processamento do arquivo");
 			return 0;
 		}
+		//volta um byte para reescrever o status
+		fseek(arqbin,-1,SEEK_CUR);
+		//atualiza o status
+		status = '0';
+		fwrite(&status,sizeof(char),1,arqbin);
+
 		//le o topo da pilha no cabeçalho
 		fread(&topoPilha,sizeof(int),1,arqbin);
 		//verifica se nc é um numero valido
@@ -677,6 +713,9 @@ int main(){
 					if(strcmp(token,"NULO") != 0){		
 						vno[atual] = strtod(token,NULL);//transforma a string em double
 					}
+					else{
+						vno[atual] = -1.0;
+					}
 				}
 				//se tiver no campo 2						
 				else if(i == 2 && token){
@@ -730,6 +769,14 @@ int main(){
 				}
 			}
 			//os ifs abaixo serve para tirar as aspas se tiver, nas entradas dos campos variaveis
+			if(vda[atual][0] == '\"'){
+				i = 1;
+				while(vda[atual][i] != '\"'){
+					vda[atual][i-1] = vda[atual][i];
+					i++;
+				}
+				vda[atual][i-1] = '\0';
+			}
 			if(vcid[atual][0] == '\"'){
 				i = 1;
 				while(vcid[atual][i] != '\"'){
@@ -753,7 +800,7 @@ int main(){
 			//se nao for -1
 			if(topoPilha != -1){
 				fseek(arqbin,16000,SEEK_SET);				//pula pro começo dos registros
-				fseek(arqbin,80 * topoPilha,SEEK_CUR);		//pula pro rrn do topoPilha
+				fseek(arqbin,80 * topoPilha,SEEK_CUR);	//pula pro rrn do topoPilha
 				fread(&regrem,sizeof(char),1,arqbin);		//le o char removido
 				//se o registro estiver removido
 				if(regrem == '*'){	
@@ -763,7 +810,21 @@ int main(){
 					fwrite(&menosum,sizeof(int),1,arqbin);	//escreve -1
 					fwrite(&vni[atual],sizeof(int),1,arqbin);//escreve o valor do numero de inscricao
 					fwrite(&vno[atual],sizeof(double),1,arqbin);//escreve o valor da nota
-					fwrite(&vda[atual],sizeof(char),10,arqbin);//escreve o valor da data
+					//verifica se o valor da data existe
+					if(strcmp(vda[atual],"NULO") == 0){		//se nao existir, coloca "\0@@@@@@@@@"
+						for(j = 0; j < 10; j++){
+							if(j == 0){
+								fputc('\0',arqbin);
+							}
+							else{
+								fputs("@",arqbin);
+							}
+						}
+					}
+					//se existir
+					else{
+						fwrite(&vda[atual],sizeof(char),10,arqbin);//escreve o valor da data
+					}
 					//verifica se o valor da cidade existe
 					if(strcmp(vcid[atual],"NULO") != 0){
 						itcv = strlen(vcid[atual]) + 2;		//indicador de tamanho recebe o tamanho da string + 2
@@ -791,6 +852,13 @@ int main(){
 			//se for -1, coloca no final do arquivo
 			else{
 				fseek(arqbin,0,SEEK_END);					//pula pro final do arquivo
+				int faltante = ftell(arqbin) % 80;
+				if(faltante != 0){
+					faltante = 80 - faltante;
+				}
+				for(j = 0; j < faltante; j++){
+					fputs("@",arqbin);
+				}
 				fputc('-',arqbin);							//coloca o byte '-'
 				fwrite(&menosum,sizeof(int),1,arqbin);		//escreve -1
 				fwrite(&vni[atual],sizeof(int),1,arqbin);	//escreve o valor do numero de inscricao
@@ -801,25 +869,42 @@ int main(){
 					itcv = strlen(vcid[atual]) + 2;			//indicador de tamanho recebe o tamanho da string + 2
 					fwrite(&itcv,sizeof(int),1,arqbin);		//escreve o indicador de tamanho
 					fputc('4',arqbin);						//coloca o byte '4'
-					fwrite(&vcid[atual],sizeof(char),strlen(vcid[atual]+1),arqbin);//escreve o campo variavel
+					fwrite(&vcid[atual],sizeof(char),strlen(vcid[atual])+1,arqbin);//escreve o campo variavel
 				}
 				//verifica se o valor do nome da escola existe
 				if(strcmp(vne[atual],"NULO") != 0){
 					itcv = strlen(vne[atual]) + 2;			//indicador de tamanho recebe o tamanho da string + 2
 					fwrite(&itcv,sizeof(int),1,arqbin);		//escreve o indicador de tamanho
 					fputc('5',arqbin);						//coloca o byte '5'
-					fwrite(&vne[atual],sizeof(char),strlen(vne[atual]+1),arqbin);//escreve o campo variavel
+					fwrite(&vne[atual],sizeof(char),strlen(vne[atual])+1,arqbin);//escreve o campo variavel
 				}
 				//completa o registro com lixo
 				for(i = 0; i < (80 - (ftell(arqbin) % 80)); i++){
-					fputc('@',arqbin);
+					fputs("@",arqbin);
+				}
+				//Completa ate o final do registro com lixo
+				fseek(arqbin,0,SEEK_END);					//pula pro final do arquivo
+				faltante = ftell(arqbin) % 80;
+				if(faltante != 0){
+					faltante = 80 - faltante;
+				}
+				for(j = 0; j < faltante; j++){
+					fputs("@",arqbin);
 				}
 			}
 		} //acaba o for de atual a n
-		//printa o arquivo no stdout com a função feita pelo monitor
-		//binarioNaTela1(arqbin);
-		//fecha o arquivo
+		
+		//volta pro primeiro byte para atualizar o status
+		fseek(arqbin,0,SEEK_SET);
+		//atualiza o status para consistente
+		status = '1';
+		fwrite(&status,sizeof(char),1,arqbin);
+
+		//fecha o arquivo de leitura/escrita
 		fclose(arqbin);
+		//printa o arquivo no stdout com a função feita pelo monitor
+		binarioNaTela2(readFile);
+
 	} //acaba a funcionalidade 6
 
 	//Funcionalidade 7 - atualização
@@ -859,6 +944,12 @@ int main(){
 			printf("Falha no processamento do arquivo");
 			return 0;
 		}
+		//volta um byte para reescrever o status
+		fseek(arqbin,-1,SEEK_CUR);
+		//atualiza o status
+		status = '0';
+		fwrite(&status,sizeof(char),1,arqbin);
+
 		//le o topo da pilha no cabeçalho
 		fread(&topoPilha,sizeof(int),1,arqbin);
 		//verifica se nc é um numero valido
@@ -990,7 +1081,7 @@ int main(){
 						fwrite(&cvlido,sizeof(char),itcv2-1,arqbin);//escreve o campo variavel lido
 						//completa o registro com lixo
 						for(i = 0; i < 80 - (ftell(arqbin) % 80); i++){
-							fputc('@',arqbin);
+							fputs("@",arqbin);
 						}
 					}
 					//se nao tiver um campo nomeEscola
@@ -1001,7 +1092,7 @@ int main(){
 						fwrite(&valorCampo[atual],sizeof(char),vclen-1,arqbin);//escreve a string lida da entrada
 						//completa o registro com lixo
 						for(i = 0; i < 80 - (ftell(arqbin) % 80); i++){
-							fputc('@',arqbin);
+							fputs("@",arqbin);
 						}
 					}
 				}
@@ -1020,7 +1111,7 @@ int main(){
 					fwrite(&cvlido,sizeof(char),itcv1-1,arqbin);	//escreve o campo variavel lido
 					//completa o registro com lixo
 					for(i = 0; i < 80 - (ftell(arqbin) % 80); i++){
-						fputc('@',arqbin);
+						fputs("@",arqbin);
 					}
 				}
 				//se nao tiver nenhum campo variavel
@@ -1031,8 +1122,16 @@ int main(){
 					fwrite(&valorCampo[atual],sizeof(char),vclen-1,arqbin);//escreve a string lida da entrada
 					//completa o registro com lixo
 					for(i = 0; i < 80 - (ftell(arqbin) % 80); i++){
-						fputc('@',arqbin);
+						fputs("@",arqbin);
 					}
+				}
+				//Completa ate o final do registro com lixo
+				int faltante = ftell(arqbin) % 80;
+				if(faltante != 0){
+					faltante = 80 - faltante;
+				}
+				for(j = 0; j < faltante; j++){
+					fputs("@",arqbin);
 				}
 			}
 			//verifica se a entrada é igual a "nomeEscola"
@@ -1049,7 +1148,7 @@ int main(){
 					fwrite(&valorCampo[atual],sizeof(char),vclen-1,arqbin);//escreve a string lida da entrada
 					//completa o registro com lixo
 					for(i = 0; i < 80 - (ftell(arqbin) % 80); i++){
-						fputc('@',arqbin);
+						fputs("@",arqbin);
 					}	
 				}
 				//se tiver um campo cidade
@@ -1062,7 +1161,7 @@ int main(){
 					fwrite(&valorCampo[atual],sizeof(char),vclen-1,arqbin);//escreve a string lida da entrada
 					//completa o registro com lixo
 					for(i = 0; i < 80 - (ftell(arqbin) % 80); i++){
-						fputc('@',arqbin);
+						fputs("@",arqbin);
 					}
 				}
 				//se nao tiver nenhum campo variavel
@@ -1073,8 +1172,16 @@ int main(){
 					fwrite(&valorCampo[atual],sizeof(char),vclen-1,arqbin);//escreve a string lida da entrada
 					//completa o registro com lixo
 					for(i = 0; i < 80 - (ftell(arqbin) % 80); i++){
-						fputc('@',arqbin);
+						fputs("@",arqbin);
 					}
+				}
+				//Completa ate o final do registro com lixo
+				int faltante = ftell(arqbin) % 80;
+				if(faltante != 0){
+					faltante = 80 - faltante;
+				}
+				for(j = 0; j < faltante; j++){
+					fputs("@",arqbin);
 				}
 			}
 			//caso a entrada nao pertencer a algum campo
@@ -1084,10 +1191,18 @@ int main(){
 			}
 
 		} //acaba o for de atual a n
-		//printa o arquivo no stdout com a função feita pelo monitor
-		//binarioNaTela1(arqbin);
-		//fecha o arquivo
+		
+		//volta pro primeiro byte para atualizar o status
+		fseek(arqbin,0,SEEK_SET);
+		//atualiza o status para consistente
+		status = '1';
+		fwrite(&status,sizeof(char),1,arqbin);
+
+		//fecha o arquivo de leitura/escrita
 		fclose(arqbin);
+		//printa o arquivo no stdout com a função feita pelo monitor
+		binarioNaTela2(readFile);
+
 	} //acaba a funcionalidade 7
 
 	//Caso nao tiver a funcionalidade implementada ainda
