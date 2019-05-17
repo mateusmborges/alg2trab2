@@ -102,6 +102,9 @@ int insercao(char* readFile, int n){
 				if(vcid[atual][0] == '\"'){
 					entrou1++;				//se é string, entra no proximo if
 				}
+				else if(vcid[atual][0] == 'N'){
+					entrou1 = 0;
+				}
 				if(entrou1 > 0){
 					//se nao for o final da string, continua concatenando a string
 					if(vcid[atual][strlen(vcid[atual])-1] != '\"'){	
@@ -128,10 +131,12 @@ int insercao(char* readFile, int n){
 			//atualiza o token
 			token = strtok(NULL," ");
 		}
+		/*	Aparentemente está dando problema com alguma entrada com \t
 		trim(vcid[atual]);
 		trim(vne[atual]);
 		trim(vda[atual]);
-		
+		*/
+
 		//os ifs abaixo serve para tirar as aspas se tiver, nas entradas dos campos variaveis
 		if(vda[atual][0] == '\"'){
 			i = 1;
@@ -221,13 +226,6 @@ int insercao(char* readFile, int n){
 		//se for -1, coloca no final do arquivo
 		else{
 			fseek(arqbin,0,SEEK_END);					//pula pro final do arquivo
-			int faltante = ftell(arqbin) % 80;
-			if(faltante != 0){
-				faltante = 80 - faltante;
-			}
-			for(j = 0; j < faltante; j++){
-				fputs("@",arqbin);
-			}
 			fputc('-',arqbin);							//coloca o byte '-'
 			fwrite(&menosum,sizeof(int),1,arqbin);		//escreve -1
 			fwrite(&vni[atual],sizeof(int),1,arqbin);	//escreve o valor do numero de inscricao
@@ -265,8 +263,11 @@ int insercao(char* readFile, int n){
 				}
 			}
 			//completa o registro com lixo
-			for(i = 0; i < (80 - (ftell(arqbin) % 80)); i++){
-				fputs("@",arqbin);
+			int faltante = ftell(arqbin) % 80;
+			if(faltante > 0){
+				for(i = 0; i < (80 - faltante); i++){
+					fputs("@",arqbin);
+				}
 			}
 			//Completa ate o final do registro com lixo
 			fseek(arqbin,0,SEEK_END);					//pula pro final do arquivo

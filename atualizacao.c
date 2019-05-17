@@ -16,15 +16,19 @@ void casoatnumeroinscricao(int rrn, char* valorCampo, FILE* arqbin){
 void casoatnota(int rrn, char* valorCampo, FILE* arqbin){
 	fseek(arqbin,16000 + (rrn*80), SEEK_SET);			//pula pro rrn
 	fseek(arqbin,9,SEEK_CUR);							//pula 9 bytes
-	int notalida = strtod(valorCampo,NULL);				//transforma a string em double
+	double notalida = strtod(valorCampo,NULL);				//transforma a string em double
 	fwrite(&notalida,sizeof(double),1,arqbin);			//escreve o novo double
 }
 
 void casoatdata(int rrn, char* valorCampo, FILE* arqbin){
+	char buffer[50]; //string para servir de buffer para o valorCampo
+	clearstring(buffer,50);	//limpa a string buffer
+	strcpy(buffer,valorCampo);	//passa o valorCampo para o buffer
+
 	fseek(arqbin,16000 + (rrn*80), SEEK_SET);			//pula pro rrn
 	fseek(arqbin,17,SEEK_CUR);							//pula 17 bytes
 	//se for nulo, então coloca \0@@@@@@@@@
-	if(strcmp(valorCampo, "NULO") == 0){			
+	if(ehnulo(valorCampo,50)){			
 		fputc('\0',arqbin);
 		for(int i = 0; i < 9; i++){
 			fputs("@", arqbin);
@@ -32,7 +36,7 @@ void casoatdata(int rrn, char* valorCampo, FILE* arqbin){
 	}
 	//se nao for nulo, então coloca a data certinho
 	else{
-		fwrite(&valorCampo,sizeof(char),10,arqbin);			//escreve a nova string
+		fwrite(&buffer,sizeof(char),10,arqbin);			//escreve a nova string
 	}
 }
 
@@ -46,15 +50,20 @@ void casoatcidade(int rrn, char* valorCampo, FILE* arqbin){
 		tag4 = char para armazenar a tag 4
 		tag5 = char para armazenar a tag 5
 		cvlido = string para armazenar o campo variavel lido
+		buffer = string para servir de buffer para o valorCampo
 	*/
 	int i, itcv1, itcv2, vclen, faltante;
 	char tag4, tag5;
 	char cvlido[50];
+	char buffer[50];
 
 	clearstring(cvlido,50);	//limpa a string cvlido
+	clearstring(buffer,50);	//limpa a string buffer
+
+	strcpy(buffer,valorCampo);	//passa o valorCampo para o buffer
 
 	//verifica se o valor do campo é nulo
-	if(strcmp(valorCampo,"NULO") == 0){
+	if(ehnulo(valorCampo,50)){
 		vclen = 0;								//se for nulo, vclen recebe 0
 	}
 	else{
@@ -86,7 +95,7 @@ void casoatcidade(int rrn, char* valorCampo, FILE* arqbin){
 			else{
 				fwrite(&vclen,sizeof(int),1,arqbin);		//escreve o tamanho da string
 				fputc('4',arqbin);							//escreve o byte '4'
-				fwrite(&valorCampo,sizeof(char),vclen-1,arqbin);//escreve a string lida da entrada
+				fwrite(&buffer,sizeof(char),vclen-1,arqbin);//escreve a string lida da entrada
 				fwrite(&itcv2,sizeof(int),1,arqbin);		//escreve o indicador de tamanho do campo variavel 2
 				fputc('5',arqbin);							//escreve o byte '5'
 				fwrite(&cvlido,sizeof(char),itcv2-1,arqbin);//escreve o campo variavel lido		
@@ -102,7 +111,7 @@ void casoatcidade(int rrn, char* valorCampo, FILE* arqbin){
 			if(vclen != 0){
 				fwrite(&vclen,sizeof(int),1,arqbin);		//escreve o tamanho da string
 				fputc('4',arqbin);							//escreve o byte '4'
-				fwrite(&valorCampo,sizeof(char),vclen-1,arqbin);//escreve a string lida da entrada		
+				fwrite(&buffer,sizeof(char),vclen-1,arqbin);//escreve a string lida da entrada		
 			}						
 			//completa o registro com lixo
 			for(i = 0; i < 80 - (ftell(arqbin) % 80); i++){
@@ -119,7 +128,7 @@ void casoatcidade(int rrn, char* valorCampo, FILE* arqbin){
 		fseek(arqbin,-(itcv1 + 4),SEEK_CUR);			//volta pra onde deveria estar o indicador de tamanho do campo variavel 1
 		fwrite(&vclen,sizeof(int),1,arqbin);			//escreve o tamanho da string
 		fputc('4',arqbin);								//escreve o byte '4'
-		fwrite(&valorCampo,sizeof(char),vclen-1,arqbin);//escreve a string lida da entrada
+		fwrite(&buffer,sizeof(char),vclen-1,arqbin);	//escreve a string lida da entrada
 		fwrite(&itcv1,sizeof(int),1,arqbin);			//escreve o indicador de tamanho do campo variavel 1
 		fputc('5',arqbin);								//escreve o byte '5'
 		fwrite(&cvlido,sizeof(char),itcv1-1,arqbin);	//escreve o campo variavel lido
@@ -133,7 +142,7 @@ void casoatcidade(int rrn, char* valorCampo, FILE* arqbin){
 		fseek(arqbin,-5,SEEK_CUR);						//volta 5 bytes	
 		fwrite(&vclen,sizeof(int),1,arqbin);			//escreve o tamanho da string
 		fputc('4',arqbin);								//escreve o byte '4'
-		fwrite(&valorCampo,sizeof(char),vclen-1,arqbin);//escreve a string lida da entrada
+		fwrite(&buffer,sizeof(char),vclen-1,arqbin);//escreve a string lida da entrada
 		//completa o registro com lixo
 		for(i = 0; i < 80 - (ftell(arqbin) % 80); i++){
 			fputs("@",arqbin);
@@ -157,13 +166,17 @@ void casoatnomeescola(int rrn, char* valorCampo, FILE* arqbin){
 		vclen = inteiro para armazenar o tamanho do valor do campo
 		faltante = inteiro para armazenar quanto falta para o final do registro
 		tag5 = char para armazenar a tag 5
+		buffer = string para servir de buffer para o valorCampo
 	*/
 	int i, itcv1, vclen, faltante;
 	char tag5;
-
+	char buffer[50];
+	
+	clearstring(buffer,50);	//limpa a string buffer
+	strcpy(buffer,valorCampo);	//passa o valorCampo para o buffer
 
 	//verifica se o valor do campo é nulo
-	if(strcmp(valorCampo,"NULO") == 0){
+	if(ehnulo(valorCampo,50)){
 		vclen = 0;		//se for nulo, vclen recebe 0
 	}
 	else{
@@ -178,7 +191,7 @@ void casoatnomeescola(int rrn, char* valorCampo, FILE* arqbin){
 		if(vclen != 0){
 			fwrite(&vclen,sizeof(int),1,arqbin);			//escreve o tamanho da string
 			fputc('5',arqbin);								//escreve o byte '5'
-			fwrite(&valorCampo,sizeof(char),vclen-1,arqbin);//escreve a string lida da entrada
+			fwrite(&buffer,sizeof(char),vclen-1,arqbin);//escreve a string lida da entrada
 		}
 		//completa o registro com lixo
 		for(i = 0; i < 80 - (ftell(arqbin) % 80); i++){
@@ -193,7 +206,7 @@ void casoatnomeescola(int rrn, char* valorCampo, FILE* arqbin){
 		if(vclen != 0){
 			fwrite(&vclen,sizeof(int),1,arqbin);			//escreve o tamanho da string
 			fputc('5',arqbin);								//escreve o byte '5'
-			fwrite(&valorCampo,sizeof(char),vclen-1,arqbin);//escreve a string lida da entrada	
+			fwrite(&buffer,sizeof(char),vclen-1,arqbin);//escreve a string lida da entrada	
 		}
 		//completa o registro com lixo
 		for(i = 0; i < 80 - (ftell(arqbin) % 80); i++){
@@ -206,7 +219,7 @@ void casoatnomeescola(int rrn, char* valorCampo, FILE* arqbin){
 		if(vclen != 0){
 			fwrite(&vclen,sizeof(int),1,arqbin);			//escreve o tamanho da string
 			fputc('5',arqbin);								//escreve o byte '5'
-			fwrite(&valorCampo,sizeof(char),vclen-1,arqbin);//escreve a string lida da entrada
+			fwrite(&buffer,sizeof(char),vclen-1,arqbin);//escreve a string lida da entrada
 		}
 		//completa o registro com lixo
 		for(i = 0; i < 80 - (ftell(arqbin) % 80); i++){

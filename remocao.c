@@ -467,8 +467,8 @@ int remocao(char* readFile, int n){
 
 	//limpa as strings acima
 	for(i = 0; i < n; i++){
-		clearstring(nomeCampo[n],50);
-		clearstring(valorCampo[n],50);
+		clearstring(nomeCampo[i],50);
+		clearstring(valorCampo[i],50);
 	}
 
 	/* Laço para passar lendo a entrada n vezes */
